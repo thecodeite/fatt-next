@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const oathId = process.env.OAUTH_ID;
@@ -66,18 +67,19 @@ export async function GET(req: NextRequest) {
     Date.now() + tokens.refresh_token_expires_in * 1000
   );
 
-  const response = NextResponse.redirect(new URL('/app/month', req.url));
-  response.cookies.set('access_token', tokens.access_token, {
+  const cookieStore = await cookies();
+  cookieStore.set('access_token', tokens.access_token, {
     expires: accessTokenExpires,
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   });
-  response.cookies.set('refresh_token', tokens.refresh_token, {
+  cookieStore.set('refresh_token', tokens.refresh_token, {
     expires: refreshTokenExpires,
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   });
-  return response;
+
+  return NextResponse.redirect(new URL('/app/month', req.url));
 }

@@ -23,14 +23,14 @@ export async function middleware(request: NextRequest) {
           response.cookies.set('access_token', tokens.access_token, {
             expires: new Date(Date.now() + tokens.expires_in * 1000),
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: 'lax',
           });
           response.cookies.set('refresh_token', tokens.refresh_token, {
             expires: new Date(
               Date.now() + tokens.refresh_token_expires_in * 1000
             ),
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: 'lax',
           });
           return response;
         }

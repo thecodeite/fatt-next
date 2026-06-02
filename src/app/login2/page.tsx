@@ -7,14 +7,14 @@ export default async function Login2Page(props: {
     refreshToken: string;
   };
 }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const refreshToken = cookieStore.get('refresh_token')?.value;
 
   async function handleSubmit(formData: FormData) {
     'use server';
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const accessToken = formData.get('accessToken') as string;
     const refreshToken = formData.get('refreshToken') as string;
     console.log('accessToken:', accessToken);

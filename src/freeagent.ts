@@ -57,7 +57,7 @@ async function getAccessToken() {
   // const token = cookieStore.get('access_token')?.value;
   // return token;
   // console.log('headers:', Array.from(headers().entries()));
-  const xAccessToken = headers().get('x-access-token');
+  const xAccessToken = (await headers()).get('x-access-token');
   return xAccessToken;
 }
 

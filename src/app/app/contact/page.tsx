@@ -33,7 +33,7 @@ const RegistrationProgressNames: Record<RegistrationProgress, string> = {
 };
 
 export default async function TasksPage({}: {}) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   // let progress: RegistrationProgress = RegistrationProgress.Unregistered;
   const progress = {

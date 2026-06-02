@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 
-export default function Cookies() {
-  const cookieJar = cookies();
+export default async function Cookies() {
+  const cookieJar = await cookies();
   const allCookies = cookieJar.getAll();
 
   return (

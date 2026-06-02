@@ -14,7 +14,7 @@ export interface FattSettings {
 export async function getFattSettings(): Promise<FattSettings> {
   'use server';
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const noteUrl = cookieStore.get('noteUrl')?.value;
 
   if (!noteUrl) {
@@ -30,7 +30,7 @@ export async function getFattSettings(): Promise<FattSettings> {
 export async function saveFattSettings(settings: FattSettings) {
   'use server';
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const noteUrl = cookieStore.get('noteUrl')?.value;
 
   if (!noteUrl) {

@@ -64,6 +64,6 @@ export async function setCookie(formData: FormData) {
     throw new Error('noteId is not a string');
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set('noteUrl', noteUrl);
 }

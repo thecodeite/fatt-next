@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const oathId = process.env.OAUTH_ID;
 const oauthSecret = process.env.OAUTH_SECRET;
@@ -61,21 +61,23 @@ export async function GET(req: NextRequest) {
   // Handle the response from the token endpoint
   const tokens: Tokens = await r.json();
 
-  const res = new Response(JSON.stringify(tokens), { status: 200 });
-
   const accessTokenExpires = new Date(Date.now() + tokens.expires_in * 1000);
   const refreshTokenExpires = new Date(
     Date.now() + tokens.refresh_token_expires_in * 1000
   );
 
-  const accessTokenExpiresString = accessTokenExpires.toUTCString();
-  const refreshTokenExpiresString = refreshTokenExpires.toUTCString();
-
-  const setCookies = [
-    `access_token=${tokens.access_token}; HttpOnly; SameSite=Strict; path=/; expires=${accessTokenExpiresString}`,
-    `refresh_token=${tokens.refresh_token}; HttpOnly; SameSite=Strict; path=/; expires=${refreshTokenExpiresString}`,
-  ].join();
-
-  res.headers.set('Set-Cookie', setCookies);
-  return res;
+  const response = NextResponse.redirect(new URL('/app/month', req.url));
+  response.cookies.set('access_token', tokens.access_token, {
+    expires: accessTokenExpires,
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+  });
+  response.cookies.set('refresh_token', tokens.refresh_token, {
+    expires: refreshTokenExpires,
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+  });
+  return response;
 }

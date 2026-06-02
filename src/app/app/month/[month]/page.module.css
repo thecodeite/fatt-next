@@ -244,3 +244,87 @@
 .contextMenuItem:hover {
   background-color: #f5f7fa;
 }
+
+.mileageDialog {
+  border: 1px solid #e3e5ea;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  min-width: 340px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+.mileageDialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mileageDialogTitle {
+  margin: 0 0 20px;
+  font-size: 16px;
+}
+
+.mileageField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.mileageField label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7e8a92;
+}
+
+.mileageField input,
+.mileageField select {
+  border: 1px solid #e3e5ea;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mileageField input:focus,
+.mileageField select:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.mileageFieldRow {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.mileageActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.mileageEntry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e3e5ea;
+}
+
+.mileageEntry span {
+  font-size: 14px;
+  vertical-align: text-top;
+}

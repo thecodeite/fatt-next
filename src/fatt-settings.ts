@@ -2,13 +2,13 @@ import { cookies } from 'next/headers';
 import { freeagentGet, FreeagentNoteResponse, freeagentPut } from './freeagent';
 
 export interface FattSettings {
-  tasks?: Record<
-    string,
-    {
-      short?: string;
-      iconName?: string;
-    }
-  >;
+  tasks?: Record<string, { short?: string; iconName?: string }>;
+  mileage?: {
+    vehicleType: string;
+    engineType: string;
+    engineSize: string;
+    destinations: Record<string, { defaultDistance: number }>;
+  };
 }
 
 export async function getFattSettings(): Promise<FattSettings> {

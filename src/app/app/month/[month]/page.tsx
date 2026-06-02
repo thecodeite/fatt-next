@@ -1,5 +1,6 @@
 'use server';
 import {
+  ExpensesResponse,
   freeagentGet,
   freeagentGetAll,
   ProjectsResponse,
@@ -30,19 +31,31 @@ export default async function Home({ params }: { params: Promise<{ month: string
   const timeslipResponses = await freeagentGetAll<TimeslipResponse>(requestUrl);
   const timeslips = timeslipResponses.flatMap((response) => response.timeslips);
 
+  const expenseResponses = await freeagentGetAll<ExpensesResponse>(
+    '/v2/expenses',
+    new URLSearchParams({
+      from_date: calendarStart.format('YYYY-MM-DD'),
+      to_date: calendarEnd.format('YYYY-MM-DD'),
+      view: 'all',
+    })
+  );
+  const mileageExpenses = expenseResponses
+    .flatMap((r) => r.expenses)
+    .filter((e) => e.category === 'https://api.freeagent.com/v2/categories/249');
+
   const dates = [...Array(daysOnScreen)].map((_, i) => {
     const date = calendarStart.add(i, 'day');
+    const key = date.format('YYYY-MM-DD');
 
     const timeslipDate: TimeslipDate = {
-      key: date.format('YYYY-MM-DD'),
+      key,
       date: date.toDate(),
       inside: date.month() === firstDay.month(),
       passed: date.isBefore(dayjs()),
       isWeekend: date.day() === 0 || date.day() === 6,
       number: date.format('Do'),
-      timeslips: timeslips.filter(
-        (timeslip) => timeslip.dated_on === date.format('YYYY-MM-DD')
-      ),
+      timeslips: timeslips.filter((t) => t.dated_on === key),
+      mileageExpenses: mileageExpenses.filter((e) => e.dated_on === key),
     };
 
     return timeslipDate;

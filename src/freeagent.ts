@@ -245,6 +245,22 @@ export async function freeagentDelete(path: string) {
   return;
 }
 
+export interface FreeagentExpense {
+  url: string;
+  user: string;
+  category: string;
+  dated_on: string;
+  currency: string;
+  gross_value: string;
+  mileage?: string;
+  description?: string;
+  project?: string;
+}
+
+export interface ExpensesResponse {
+  expenses: FreeagentExpense[];
+}
+
 export interface CreateFreeagentTimeslip {
   task: string;
   user: string;

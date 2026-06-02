@@ -27,8 +27,9 @@ Fields:
 | Destination      | Free-text with autocomplete suggestions from previous destinations.         |
 | Distance (miles) | Auto-filled when a known destination is selected. Editable.                 |
 | Start odometer   | Optional. Numeric.                                                          |
-| End odometer     | Optional. Numeric. Auto-filled as `start + distance` when start is entered. |
+| End odometer     | Optional. Numeric. Two-way bound with Distance when Start odometer is set.  |
 
+- Distance and End odometer are two-way bound when Start odometer is set: changing Distance recalculates End odometer; changing End odometer recalculates Distance.
 - If a known destination is selected and its distance differs from what was auto-filled, the user can override it.
 - Submitting the form creates a FreeAgent expense and closes the dialog.
 - If start/end odometer values are provided, they are encoded into the expense description (see §4).
@@ -58,7 +59,7 @@ Fields:
 5. **Odometer description format** — Must be parseable if we want to display the log later.
    - _Proposal:_ `"[Destination] | odo: [start]→[end]"` e.g. `"London Office | odo: 12345→12678"`. If no odometer values, just `"[Destination]"`.
 
-6. **Viewing logged mileage** — Should the calendar day show a mileage entry the same way it shows timeslips? Out of scope for v1.
+6. **Viewing logged mileage** — Days with mileage show a `directions_car` icon and total miles at the bottom of the day cell. Expenses with `category = /v2/categories/249` are fetched alongside timeslips on the month page and filtered per day.
 
 7. **Edit / delete mileage** — Out of scope for v1.
 
@@ -126,8 +127,12 @@ Fields:
 - [ ] Typing a new destination and submitting creates a FreeAgent expense with the correct date, distance, and description
 - [ ] The new destination appears in autocomplete suggestions on subsequent uses
 - [ ] Selecting a known destination auto-fills the distance
+- [ ] Dialog opens centred on screen
 - [ ] Entering start odometer auto-fills end odometer as start + distance
+- [ ] Changing end odometer (with start set) recalculates distance
+- [ ] Changing distance (with start set) recalculates end odometer
 - [ ] Submitting with odometer values encodes them in the FreeAgent expense description
+- [ ] Days with logged mileage show a car icon and distance at the bottom of the day cell
 - [ ] Mileage expense is created with correct vehicle type (car), engine type (petrol), and engine size (1401–2000cc)
 - [ ] When only one eligible project exists, no project picker is shown and the expense is linked to it automatically
 - [ ] When multiple eligible projects exist, a project dropdown is shown and the selected project is used

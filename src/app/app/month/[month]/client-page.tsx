@@ -42,6 +42,10 @@ export function ClientPage({
     };
   });
 
+  const eligibleProjects = projects.filter((project) =>
+    tasks.some((task) => task.project === project.url && task.is_billable)
+  );
+
   const thisMonth = dayjs(firstOfMonth);
   const lastMonth = thisMonth.subtract(1, 'month');
   const nextMonth = thisMonth.add(1, 'month');
@@ -99,6 +103,7 @@ export function ClientPage({
         setStartDate={setStartDate}
         setEndDate={setEndDate}
         fattSettings={fattSettings}
+        eligibleProjects={eligibleProjects}
       />
     </>
   );

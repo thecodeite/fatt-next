@@ -2,10 +2,11 @@
 import { getTaskName, getTaskIcon } from '@/taskMap';
 import styles from './page.module.css';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { FreeagentTask, FreeagentTimeslip } from '@/freeagent';
+import { FreeagentExpense, FreeagentProject, FreeagentTask, FreeagentTimeslip } from '@/freeagent';
 import { cn } from '@/app/utils/cn';
 import { createTimeslips, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
+import { MileageDialog } from './mileage-dialog';
 
 let closeCurrentMenu: (() => void) | null = null;
 
@@ -17,6 +18,7 @@ export interface TimeslipDate {
   inside: boolean;
   number: string;
   timeslips: FreeagentTimeslip[];
+  mileageExpenses: FreeagentExpense[];
 }
 
 export type TimeslipDateWithClient = TimeslipDate & {
@@ -30,6 +32,7 @@ interface DateProps {
   small?: boolean;
   fattSettings: FattSettings;
   tasks: FreeagentTask[];
+  eligibleProjects: FreeagentProject[];
 }
 
 function calcColour(timeslipDate: TimeslipDateWithClient, totalHours: number) {
@@ -47,9 +50,11 @@ export function Date({
   small,
   fattSettings,
   tasks,
+  eligibleProjects,
 }: DateProps) {
   const [dragging, setDragging] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [mileageOpen, setMileageOpen] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -164,19 +169,23 @@ export function Date({
               {small ? (
                 <>{totalHours}h</>
               ) : (
-                // <NoTimeslips />
                 <>
                   {timeslipDate.timeslips.length === 0 ? (
                     <NoTimeslips />
                   ) : (
-                    // timeslipDate.timeslips.map((timeslip) => (
-                    //   <Timeslip key={timeslip.url} timeslip={timeslip} />
-                    // ))
                     <Timeslips
                       timeslips={timeslipDate.timeslips}
                       fattSettings={fattSettings}
                       tasks={tasks}
                     />
+                  )}
+                  {timeslipDate.mileageExpenses.length > 0 && (
+                    <div className={styles.mileageEntry}>
+                      <span className="material-symbols-outlined">directions_car</span>
+                      {timeslipDate.mileageExpenses
+                        .reduce((sum, e) => sum + parseFloat(e.mileage ?? '0'), 0)
+                        .toFixed(1)}mi
+                    </div>
                   )}
                 </>
               )}
@@ -226,7 +235,26 @@ export function Date({
               ))}
             </>
           )}
+          <hr className={styles.contextMenuDivider} />
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              setContextMenu(null);
+              closeCurrentMenu = null;
+              setMileageOpen(true);
+            }}
+          >
+            Log mileage…
+          </button>
         </div>
+      )}
+      {mileageOpen && (
+        <MileageDialog
+          date={timeslipDate.key}
+          eligibleProjects={eligibleProjects}
+          fattSettings={fattSettings}
+          onClose={() => setMileageOpen(false)}
+        />
       )}
     </div>
   );

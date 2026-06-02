@@ -1,11 +1,13 @@
 'use client';
 import { getTaskName, getTaskIcon } from '@/taskMap';
 import styles from './page.module.css';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { FreeagentTask, FreeagentTimeslip } from '@/freeagent';
 import { cn } from '@/app/utils/cn';
-import { updateTimeslip } from '@/app/actions';
+import { createTimeslips, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
+
+let closeCurrentMenu: (() => void) | null = null;
 
 export interface TimeslipDate {
   key: string;
@@ -47,6 +49,26 @@ export function Date({
   tasks,
 }: DateProps) {
   const [dragging, setDragging] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCurrentMenu?.();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+    closeCurrentMenu = () => setContextMenu(null);
+  };
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    document.addEventListener('click', close);
+    document.addEventListener('contextmenu', close);
+    return () => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('contextmenu', close);
+    };
+  }, [contextMenu]);
   const totalHours = timeslipDate.timeslips.reduce(
     (total, timeslip) => total + parseFloat(timeslip.hours),
     0
@@ -95,6 +117,7 @@ export function Date({
 
   return (
     <div
+      onContextMenu={handleContextMenu}
       onDragOver={dragOver}
       onDragEnter={dragEnter(timeslipDate)}
       onDrop={drop(timeslipDate)}
@@ -161,6 +184,30 @@ export function Date({
           </>
         )}
       </div>
+      {contextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.stopPropagation()}
+        >
+          <div className={styles.contextMenuHeader}>Add 8h</div>
+          {tasks.map((task) => (
+            <button
+              key={task.url}
+              className={styles.contextMenuItem}
+              onClick={() => {
+                createTimeslips([timeslipDate.key], task.url, task.project, '8.0');
+                setContextMenu(null);
+                closeCurrentMenu = null;
+              }}
+            >
+              {getTaskIcon(task, fattSettings)}
+              {getTaskName(task, fattSettings)}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

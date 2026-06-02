@@ -198,3 +198,43 @@
  .clearSelect:focus-visible {
   outline: none;
  }
+
+.contextMenu {
+  position: fixed;
+  background: white;
+  border: 1px solid #e3e5ea;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.contextMenuHeader {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7e8a92;
+  border-bottom: 1px solid #e3e5ea;
+}
+
+.contextMenuItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: #181a1b;
+}
+
+.contextMenuItem:hover {
+  background-color: #f5f7fa;
+}

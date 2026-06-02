@@ -210,6 +210,12 @@
   overflow: hidden;
 }
 
+.contextMenuDivider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #e3e5ea;
+}
+
 .contextMenuHeader {
   padding: 6px 12px;
   font-size: 11px;

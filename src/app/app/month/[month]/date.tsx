@@ -206,6 +206,26 @@ export function Date({
               {getTaskName(task, fattSettings)}
             </button>
           ))}
+          {timeslipDate.timeslips.length > 0 && (
+            <>
+              <hr className={styles.contextMenuDivider} />
+              <div className={styles.contextMenuHeader}>Delete</div>
+              {timeslipDate.timeslips.map((timeslip) => (
+                <button
+                  key={timeslip.url}
+                  className={styles.contextMenuItem}
+                  onClick={() => {
+                    updateTimeslip(timeslip.url, 'delete');
+                    setContextMenu(null);
+                    closeCurrentMenu = null;
+                  }}
+                >
+                  {getTaskIcon(timeslip.task, fattSettings)}
+                  {getTaskName(timeslip.task, fattSettings, tasks)}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>

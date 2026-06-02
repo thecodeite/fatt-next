@@ -12,8 +12,9 @@ import { TimeslipDate } from './date';
 import { ClientPage } from './client-page';
 import { getFattSettings } from '@/fatt-settings';
 
-export default async function Home({ params }: { params: { month: string } }) {
-  const firstDay = dayjs(`${params.month}-01`);
+export default async function Home({ params }: { params: Promise<{ month: string }> }) {
+  const { month } = await params;
+  const firstDay = dayjs(`${month}-01`);
   const prefixDays = (firstDay.day() + 6) % 7;
   const daysInMonth = firstDay.daysInMonth();
   const weeks = Math.ceil((prefixDays + daysInMonth) / 7);
@@ -72,7 +73,7 @@ export default async function Home({ params }: { params: { month: string } }) {
   return (
     <main>
       <ClientPage
-        firstOfMonth={params.month}
+        firstOfMonth={month}
         tasks={tasks}
         projects={projects.projects}
         dates={dates}

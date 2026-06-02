@@ -9,14 +9,15 @@ import {
   saveFattSettings,
 } from '@/fatt-settings';
 
-export default async function Tasks({ params }: { params: { tasks: string } }) {
-  const tasksArg = params.tasks === 'all' ? 'all' : 'active';
+export default async function Tasks({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+  const { view } = await searchParams;
+  const tasksArg = view === 'all' ? 'all' : 'active';
   const tasks = await freeagentGet<TasksResponse>(`/v2/tasks?view=${tasksArg}`);
   const projects = await freeagentGet<ProjectsResponse>(
     `/v2/projects?view=${tasksArg}`
   );
 
-  const showAllTasks = params.tasks === 'all';
+  const showAllTasks = view === 'all';
 
   const settings = await getFattSettings();
 

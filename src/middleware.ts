@@ -9,30 +9,41 @@ export async function middleware(request: NextRequest) {
   if (!accessToken) {
     const refreshToken = request.cookies.get('refresh_token');
     if (refreshToken) {
-      const tokens = await refreshAccessTokens(refreshToken.value);
+      try {
+        const tokens = await refreshAccessTokens(refreshToken.value);
 
-      if (tokens) {
-        requestHeaders.set('x-access-token', tokens.access_token);
-        const response = NextResponse.next({
-          request: {
-            headers: requestHeaders,
-          },
-        });
+        if (tokens) {
+          requestHeaders.set('x-access-token', tokens.access_token);
+          const response = NextResponse.next({
+            request: {
+              headers: requestHeaders,
+            },
+          });
 
-        response.cookies.set('access_token', tokens.access_token, {
-          expires: new Date(Date.now() + tokens.expires_in * 1000),
-          httpOnly: true,
-          sameSite: 'strict',
-        });
-        response.cookies.set('refresh_token', tokens.refresh_token, {
-          expires: new Date(
-            Date.now() + tokens.refresh_token_expires_in * 1000
-          ),
-          httpOnly: true,
-          sameSite: 'strict',
-        });
-        return response;
+          response.cookies.set('access_token', tokens.access_token, {
+            expires: new Date(Date.now() + tokens.expires_in * 1000),
+            httpOnly: true,
+            sameSite: 'strict',
+          });
+          response.cookies.set('refresh_token', tokens.refresh_token, {
+            expires: new Date(
+              Date.now() + tokens.refresh_token_expires_in * 1000
+            ),
+            httpOnly: true,
+            sameSite: 'strict',
+          });
+          return response;
+        }
+      } catch (e) {
+        console.error('Token refresh failed:', e);
       }
+    }
+
+    if (request.nextUrl.pathname.startsWith('/app')) {
+      const response = NextResponse.redirect(new URL('/', request.url));
+      response.cookies.delete('access_token');
+      response.cookies.delete('refresh_token');
+      return response;
     }
   } else {
     requestHeaders.set('x-access-token', accessToken);

@@ -112,6 +112,7 @@ export default async function Tasks({ searchParams }: { searchParams: Promise<{ 
                         <option value=""></option>
                         <option value="home">home</option>
                         <option value="apartment">apartment</option>
+                        <option value="nights_stay">nights_stay</option>
                         <option value="beach_access">beach_access</option>
                         <option value="sick">sick</option>
                         <option value="contract">contract</option>

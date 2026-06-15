@@ -8,6 +8,7 @@ import { createTimeslips, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
 import { MileageDialog } from './mileage-dialog';
 import { TravelExpenseDialog } from './travel-expense-dialog';
+import { OfficeTrip } from '@/app/actions';
 
 let closeCurrentMenu: (() => void) | null = null;
 
@@ -21,6 +22,7 @@ export interface TimeslipDate {
   timeslips: FreeagentTimeslip[];
   mileageExpenses: FreeagentExpense[];
   travelExpenses: FreeagentExpense[];
+  officeTrips: OfficeTrip[];
 }
 
 export type TimeslipDateWithClient = TimeslipDate & {
@@ -35,6 +37,26 @@ interface DateProps {
   fattSettings: FattSettings;
   tasks: FreeagentTask[];
   eligibleProjects: FreeagentProject[];
+}
+
+const TIME_OFFSETS: Record<OfficeTrip['startTime'], number> = {
+  morning: 20,
+  midday: 50,
+  evening: 80,
+};
+
+function tripBarStyle(trip: OfficeTrip, dayKey: string): React.CSSProperties {
+  const isStart = trip.startDate === dayKey;
+  const isEnd = trip.endDate === dayKey;
+  const left = isStart ? TIME_OFFSETS[trip.startTime] : 0;
+  const right = isEnd ? 100 - TIME_OFFSETS[trip.endTime] : 0;
+  const rl = isStart ? '3px' : '0';
+  const rr = isEnd ? '3px' : '0';
+  return {
+    marginLeft: `${left}%`,
+    marginRight: `${right}%`,
+    borderRadius: `${rl} ${rr} ${rr} ${rl}`,
+  };
 }
 
 function calcColour(timeslipDate: TimeslipDateWithClient, totalHours: number) {
@@ -144,6 +166,9 @@ export function Date({
       >
         {true && (
           <>
+            {timeslipDate.officeTrips.length > 0 && (
+              <TripStrip trips={timeslipDate.officeTrips} dayKey={timeslipDate.key} />
+            )}
             <div
               className={cn(
                 styles.dayBlockTop,
@@ -348,6 +373,47 @@ function Timeslips({
         </div>
       )}
     </>
+  );
+}
+
+function TripStrip({ trips, dayKey }: { trips: OfficeTrip[]; dayKey: string }) {
+  const [hovered, setHovered] = useState<{ trip: OfficeTrip; x: number; y: number } | null>(null);
+
+  const sorted = [...trips].sort((a, b) =>
+    a.startDate !== b.startDate
+      ? a.startDate < b.startDate ? -1 : 1
+      : a.endDate > b.endDate ? -1 : 1
+  );
+
+  return (
+    <div className={styles.tripStrip}>
+      {sorted.map((trip) => (
+        <div
+          key={trip.noteUrl}
+          className={styles.tripBar}
+          style={tripBarStyle(trip, dayKey)}
+          onMouseEnter={(e) => setHovered({ trip, x: e.clientX, y: e.clientY })}
+          onMouseMove={(e) => setHovered((h) => h ? { ...h, x: e.clientX, y: e.clientY } : null)}
+          onMouseLeave={() => setHovered(null)}
+        />
+      ))}
+      {hovered && (
+        <div
+          className={styles.tripHover}
+          style={{ left: hovered.x + 12, top: hovered.y + 12 }}
+        >
+          {hovered.trip.description && (
+            <div className={styles.tripHoverTitle}>{hovered.trip.description}</div>
+          )}
+          <div className={styles.tripHoverRow}>
+            From: {hovered.trip.startDate} {hovered.trip.startTime}
+          </div>
+          <div className={styles.tripHoverRow}>
+            To: {hovered.trip.endDate} {hovered.trip.endTime}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

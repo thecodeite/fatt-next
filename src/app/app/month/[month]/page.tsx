@@ -64,6 +64,7 @@ export default async function Home({ params }: { params: Promise<{ month: string
       timeslips: timeslips.filter((t) => t.dated_on === key),
       mileageExpenses: mileageExpenses.filter((e) => e.dated_on === key),
       travelExpenses: travelExpenses.filter((e) => e.dated_on === key),
+      officeTrips: [] as OfficeTrip[],
     };
 
     return timeslipDate;
@@ -98,7 +99,14 @@ export default async function Home({ params }: { params: Promise<{ month: string
   const tripsByProject = await Promise.all(
     eligibleProjects.map((p) => getOfficeTrips(p.url))
   );
-  const officeTrips: OfficeTrip[] = tripsByProject.flat();
+  const allOfficeTrips: OfficeTrip[] = tripsByProject.flat();
+
+  const datesWithTrips = dates.map((d) => ({
+    ...d,
+    officeTrips: allOfficeTrips.filter(
+      (t) => t.startDate <= d.key && t.endDate >= d.key
+    ),
+  }));
 
   return (
     <main>
@@ -106,9 +114,8 @@ export default async function Home({ params }: { params: Promise<{ month: string
         firstOfMonth={month}
         tasks={tasks}
         projects={projects.projects}
-        dates={dates}
+        dates={datesWithTrips}
         fattSettings={fattSettings}
-        officeTrips={officeTrips}
       />
     </main>
   );

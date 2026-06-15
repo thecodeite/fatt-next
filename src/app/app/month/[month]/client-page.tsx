@@ -5,7 +5,7 @@ import styles from './page.module.css';
 import { TaskPicker } from './taskPicker';
 import { Calendar } from './calendar';
 import { useDateSelect } from './useDateSelect';
-import { createTimeslips, OfficeTrip } from '@/app/actions';
+import { createTimeslips } from '@/app/actions';
 import { useState } from 'react';
 import Link from 'next/link';
 import dayjs from 'dayjs';
@@ -17,7 +17,6 @@ interface ClientPageProps {
   projects: FreeagentProject[];
   dates: TimeslipDate[];
   fattSettings: FattSettings;
-  officeTrips: OfficeTrip[];
 }
 
 export function ClientPage({
@@ -26,7 +25,6 @@ export function ClientPage({
   projects,
   dates,
   fattSettings,
-  officeTrips,
 }: ClientPageProps) {
   const { datesDescription, setStartDate, setEndDate, inRange, selectedDates } =
     useDateSelect();
@@ -107,16 +105,6 @@ export function ClientPage({
         fattSettings={fattSettings}
         eligibleProjects={eligibleProjects}
       />
-      {officeTrips.length > 0 && (
-        <ul style={{ padding: '1rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-          {officeTrips.map((trip) => (
-            <li key={trip.noteUrl}>
-              {trip.startDate} {trip.startTime} → {trip.endDate} {trip.endTime}
-              {trip.description && ` — ${trip.description}`}
-            </li>
-          ))}
-        </ul>
-      )}
     </>
   );
 }

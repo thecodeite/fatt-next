@@ -26,7 +26,7 @@ export function ClientPage({
   dates,
   fattSettings,
 }: ClientPageProps) {
-  const { datesDescription, setStartDate, setEndDate, inRange, selectedDates } =
+  const { datesDescription, startDate, endDate, setStartDate, setEndDate, inRange, selectedDates } =
     useDateSelect();
   const [taskAndProject, setTaskAndProject] = useState('');
   const [hours, setHours] = useState('8');
@@ -104,6 +104,8 @@ export function ClientPage({
         setEndDate={setEndDate}
         fattSettings={fattSettings}
         eligibleProjects={eligibleProjects}
+        selectionStart={startDate}
+        selectionEnd={endDate}
       />
     </>
   );

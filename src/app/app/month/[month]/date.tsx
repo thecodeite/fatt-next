@@ -1,13 +1,15 @@
 'use client';
 import { getTaskName, getTaskIcon } from '@/taskMap';
 import styles from './page.module.css';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { FreeagentExpense, FreeagentProject, FreeagentTask, FreeagentTimeslip } from '@/freeagent';
 import { cn } from '@/app/utils/cn';
-import { createTimeslips, updateTimeslip } from '@/app/actions';
+import { createTimeslips, deleteOfficeTrip, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
 import { MileageDialog } from './mileage-dialog';
 import { TravelExpenseDialog } from './travel-expense-dialog';
+import { OfficeTripDialog } from './office-trip-dialog';
+import { OfficeTrip } from '@/app/actions';
 
 let closeCurrentMenu: (() => void) | null = null;
 
@@ -21,6 +23,7 @@ export interface TimeslipDate {
   timeslips: FreeagentTimeslip[];
   mileageExpenses: FreeagentExpense[];
   travelExpenses: FreeagentExpense[];
+  officeTrips: OfficeTrip[];
 }
 
 export type TimeslipDateWithClient = TimeslipDate & {
@@ -35,6 +38,28 @@ interface DateProps {
   fattSettings: FattSettings;
   tasks: FreeagentTask[];
   eligibleProjects: FreeagentProject[];
+  selectionStart: string;
+  selectionEnd: string;
+}
+
+const TIME_OFFSETS: Record<OfficeTrip['startTime'], number> = {
+  morning: 20,
+  midday: 50,
+  evening: 80,
+};
+
+function tripBarStyle(trip: OfficeTrip, dayKey: string): React.CSSProperties {
+  const isStart = trip.startDate === dayKey;
+  const isEnd = trip.endDate === dayKey;
+  const left = isStart ? TIME_OFFSETS[trip.startTime] : 0;
+  const right = isEnd ? 100 - TIME_OFFSETS[trip.endTime] : 0;
+  const rl = isStart ? '3px' : '0';
+  const rr = isEnd ? '3px' : '0';
+  return {
+    marginLeft: `${left}%`,
+    marginRight: `${right}%`,
+    borderRadius: `${rl} ${rr} ${rr} ${rl}`,
+  };
 }
 
 function calcColour(timeslipDate: TimeslipDateWithClient, totalHours: number) {
@@ -53,18 +78,23 @@ export function Date({
   fattSettings,
   tasks,
   eligibleProjects,
+  selectionStart,
+  selectionEnd,
 }: DateProps) {
   const [dragging, setDragging] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [mileageOpen, setMileageOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
+  const [tripOpen, setTripOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<OfficeTrip | null>(null);
+  const rightClickedTripRef = useRef<OfficeTrip | null>(null);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     closeCurrentMenu?.();
     setContextMenu({ x: e.clientX, y: e.clientY });
-    closeCurrentMenu = () => setContextMenu(null);
+    closeCurrentMenu = () => { setContextMenu(null); rightClickedTripRef.current = null; };
   };
 
   useEffect(() => {
@@ -144,6 +174,14 @@ export function Date({
       >
         {true && (
           <>
+            {timeslipDate.officeTrips.length > 0 && (
+              <TripStrip
+                trips={timeslipDate.officeTrips}
+                dayKey={timeslipDate.key}
+                onEdit={(trip) => { setEditingTrip(trip); setTripOpen(true); }}
+                onTripRightClick={(trip) => { rightClickedTripRef.current = trip; }}
+              />
+            )}
             <div
               className={cn(
                 styles.dayBlockTop,
@@ -247,7 +285,25 @@ export function Date({
               ))}
             </>
           )}
+          {rightClickedTripRef.current && (
+            <>
+              <hr className={styles.contextMenuDivider} />
+              <div className={styles.contextMenuHeader}>Trip</div>
+              <button
+                className={styles.contextMenuItem}
+                onClick={() => {
+                  const trip = rightClickedTripRef.current!;
+                  setContextMenu(null);
+                  closeCurrentMenu = null;
+                  deleteOfficeTrip(trip.noteUrl);
+                }}
+              >
+                Delete trip
+              </button>
+            </>
+          )}
           <hr className={styles.contextMenuDivider} />
+          <div className={styles.contextMenuHeader}>Log…</div>
           <button
             className={styles.contextMenuItem}
             onClick={() => {
@@ -268,6 +324,17 @@ export function Date({
           >
             Log travel expense…
           </button>
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              setContextMenu(null);
+              closeCurrentMenu = null;
+              setEditingTrip(null);
+              setTripOpen(true);
+            }}
+          >
+            Log office trip…
+          </button>
         </div>
       )}
       {mileageOpen && (
@@ -283,6 +350,16 @@ export function Date({
           date={timeslipDate.key}
           eligibleProjects={eligibleProjects}
           onClose={() => setTravelOpen(false)}
+        />
+      )}
+      {tripOpen && (
+        <OfficeTripDialog
+          date={timeslipDate.key}
+          selectionStart={timeslipDate.isSelected !== 'no' ? selectionStart : undefined}
+          selectionEnd={timeslipDate.isSelected !== 'no' ? selectionEnd : undefined}
+          eligibleProjects={eligibleProjects}
+          trip={editingTrip ?? undefined}
+          onClose={() => { setTripOpen(false); setEditingTrip(null); }}
         />
       )}
     </div>
@@ -348,6 +425,49 @@ function Timeslips({
         </div>
       )}
     </>
+  );
+}
+
+function TripStrip({ trips, dayKey, onEdit, onTripRightClick }: { trips: OfficeTrip[]; dayKey: string; onEdit: (trip: OfficeTrip) => void; onTripRightClick: (trip: OfficeTrip) => void }) {
+  const [hovered, setHovered] = useState<{ trip: OfficeTrip; x: number; y: number } | null>(null);
+
+  const sorted = [...trips].sort((a, b) =>
+    a.startDate !== b.startDate
+      ? a.startDate < b.startDate ? -1 : 1
+      : a.endDate > b.endDate ? -1 : 1
+  );
+
+  return (
+    <div className={styles.tripStrip}>
+      {sorted.map((trip) => (
+        <div
+          key={trip.noteUrl}
+          className={styles.tripBar}
+          style={tripBarStyle(trip, dayKey)}
+          onClick={(e) => { e.stopPropagation(); onEdit(trip); }}
+          onContextMenu={() => onTripRightClick(trip)}
+          onMouseEnter={(e) => setHovered({ trip, x: e.clientX, y: e.clientY })}
+          onMouseMove={(e) => setHovered((h) => h ? { ...h, x: e.clientX, y: e.clientY } : null)}
+          onMouseLeave={() => setHovered(null)}
+        />
+      ))}
+      {hovered && (
+        <div
+          className={styles.tripHover}
+          style={{ left: hovered.x + 12, top: hovered.y + 12 }}
+        >
+          {hovered.trip.description && (
+            <div className={styles.tripHoverTitle}>{hovered.trip.description}</div>
+          )}
+          <div className={styles.tripHoverRow}>
+            From: {hovered.trip.startDate} {hovered.trip.startTime}
+          </div>
+          <div className={styles.tripHoverRow}>
+            To: {hovered.trip.endDate} {hovered.trip.endTime}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

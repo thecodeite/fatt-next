@@ -328,3 +328,36 @@
   font-size: 14px;
   vertical-align: text-top;
 }
+
+.tripStrip {
+  padding: 3px 0 2px;
+}
+
+.tripBar {
+  height: 6px;
+  background-color: #7ccd72;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+
+.tripHover {
+  position: fixed;
+  z-index: 1001;
+  background: white;
+  border: 1px solid #e3e5ea;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 12px;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tripHoverTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tripHoverRow {
+  color: #7e8a92;
+}

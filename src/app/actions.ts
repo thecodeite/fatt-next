@@ -184,6 +184,19 @@ export async function getOfficeTrips(projectUrl: string): Promise<OfficeTrip[]> 
     .filter((t): t is OfficeTrip => t !== null);
 }
 
+export async function updateOfficeTrip(
+  noteUrl: string,
+  trip: Omit<OfficeTrip, 'noteUrl'>
+): Promise<void> {
+  await freeagentPut(noteUrl, { note: { note: serializeTrip(trip) } });
+  await revalidatePath('/', 'layout');
+}
+
+export async function deleteOfficeTrip(noteUrl: string): Promise<void> {
+  await freeagentDelete(noteUrl);
+  await revalidatePath('/', 'layout');
+}
+
 export async function createOfficeTrip(
   projectUrl: string,
   trip: Omit<OfficeTrip, 'noteUrl'>

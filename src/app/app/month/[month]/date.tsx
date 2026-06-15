@@ -1,10 +1,10 @@
 'use client';
 import { getTaskName, getTaskIcon } from '@/taskMap';
 import styles from './page.module.css';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { FreeagentExpense, FreeagentProject, FreeagentTask, FreeagentTimeslip } from '@/freeagent';
 import { cn } from '@/app/utils/cn';
-import { createTimeslips, updateTimeslip } from '@/app/actions';
+import { createTimeslips, deleteOfficeTrip, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
 import { MileageDialog } from './mileage-dialog';
 import { TravelExpenseDialog } from './travel-expense-dialog';
@@ -38,6 +38,8 @@ interface DateProps {
   fattSettings: FattSettings;
   tasks: FreeagentTask[];
   eligibleProjects: FreeagentProject[];
+  selectionStart: string;
+  selectionEnd: string;
 }
 
 const TIME_OFFSETS: Record<OfficeTrip['startTime'], number> = {
@@ -76,19 +78,23 @@ export function Date({
   fattSettings,
   tasks,
   eligibleProjects,
+  selectionStart,
+  selectionEnd,
 }: DateProps) {
   const [dragging, setDragging] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [mileageOpen, setMileageOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
   const [tripOpen, setTripOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<OfficeTrip | null>(null);
+  const rightClickedTripRef = useRef<OfficeTrip | null>(null);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     closeCurrentMenu?.();
     setContextMenu({ x: e.clientX, y: e.clientY });
-    closeCurrentMenu = () => setContextMenu(null);
+    closeCurrentMenu = () => { setContextMenu(null); rightClickedTripRef.current = null; };
   };
 
   useEffect(() => {
@@ -169,7 +175,12 @@ export function Date({
         {true && (
           <>
             {timeslipDate.officeTrips.length > 0 && (
-              <TripStrip trips={timeslipDate.officeTrips} dayKey={timeslipDate.key} />
+              <TripStrip
+                trips={timeslipDate.officeTrips}
+                dayKey={timeslipDate.key}
+                onEdit={(trip) => { setEditingTrip(trip); setTripOpen(true); }}
+                onTripRightClick={(trip) => { rightClickedTripRef.current = trip; }}
+              />
             )}
             <div
               className={cn(
@@ -274,7 +285,25 @@ export function Date({
               ))}
             </>
           )}
+          {rightClickedTripRef.current && (
+            <>
+              <hr className={styles.contextMenuDivider} />
+              <div className={styles.contextMenuHeader}>Trip</div>
+              <button
+                className={styles.contextMenuItem}
+                onClick={() => {
+                  const trip = rightClickedTripRef.current!;
+                  setContextMenu(null);
+                  closeCurrentMenu = null;
+                  deleteOfficeTrip(trip.noteUrl);
+                }}
+              >
+                Delete trip
+              </button>
+            </>
+          )}
           <hr className={styles.contextMenuDivider} />
+          <div className={styles.contextMenuHeader}>Log…</div>
           <button
             className={styles.contextMenuItem}
             onClick={() => {
@@ -300,6 +329,7 @@ export function Date({
             onClick={() => {
               setContextMenu(null);
               closeCurrentMenu = null;
+              setEditingTrip(null);
               setTripOpen(true);
             }}
           >
@@ -325,8 +355,11 @@ export function Date({
       {tripOpen && (
         <OfficeTripDialog
           date={timeslipDate.key}
+          selectionStart={timeslipDate.isSelected !== 'no' ? selectionStart : undefined}
+          selectionEnd={timeslipDate.isSelected !== 'no' ? selectionEnd : undefined}
           eligibleProjects={eligibleProjects}
-          onClose={() => setTripOpen(false)}
+          trip={editingTrip ?? undefined}
+          onClose={() => { setTripOpen(false); setEditingTrip(null); }}
         />
       )}
     </div>
@@ -395,7 +428,7 @@ function Timeslips({
   );
 }
 
-function TripStrip({ trips, dayKey }: { trips: OfficeTrip[]; dayKey: string }) {
+function TripStrip({ trips, dayKey, onEdit, onTripRightClick }: { trips: OfficeTrip[]; dayKey: string; onEdit: (trip: OfficeTrip) => void; onTripRightClick: (trip: OfficeTrip) => void }) {
   const [hovered, setHovered] = useState<{ trip: OfficeTrip; x: number; y: number } | null>(null);
 
   const sorted = [...trips].sort((a, b) =>
@@ -411,6 +444,8 @@ function TripStrip({ trips, dayKey }: { trips: OfficeTrip[]; dayKey: string }) {
           key={trip.noteUrl}
           className={styles.tripBar}
           style={tripBarStyle(trip, dayKey)}
+          onClick={(e) => { e.stopPropagation(); onEdit(trip); }}
+          onContextMenu={() => onTripRightClick(trip)}
           onMouseEnter={(e) => setHovered({ trip, x: e.clientX, y: e.clientY })}
           onMouseMove={(e) => setHovered((h) => h ? { ...h, x: e.clientX, y: e.clientY } : null)}
           onMouseLeave={() => setHovered(null)}

@@ -27,6 +27,8 @@ export function Calendar({
   fattSettings,
   tasks,
   eligibleProjects,
+  selectionStart,
+  selectionEnd,
 }: {
   dates: TimeslipDateWithClient[];
   setStartDate: Dispatch<SetStateAction<string>>;
@@ -34,6 +36,8 @@ export function Calendar({
   fattSettings: FattSettings;
   tasks: FreeagentTask[];
   eligibleProjects: FreeagentProject[];
+  selectionStart: string;
+  selectionEnd: string;
 }) {
   const [hideWeekends, setHideWeekends] = useState(true);
 
@@ -81,6 +85,8 @@ export function Calendar({
                   fattSettings={fattSettings}
                   tasks={tasks}
                   eligibleProjects={eligibleProjects}
+                  selectionStart={selectionStart}
+                  selectionEnd={selectionEnd}
                 />
               </div>
             );

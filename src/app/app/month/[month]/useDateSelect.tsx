@@ -35,6 +35,8 @@ export function useDateSelect() {
   const datesDescription = formatDates(selectedDates);
   return {
     datesDescription,
+    startDate,
+    endDate,
     setStartDate,
     setEndDate,
     inRange,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FreeagentProject } from '@/freeagent';
-import { createOfficeTrip } from '@/app/actions';
+import { createOfficeTrip, deleteOfficeTrip, OfficeTrip, updateOfficeTrip } from '@/app/actions';
 import styles from './page.module.css';
 
 type TimeOfDay = 'morning' | 'midday' | 'evening';
@@ -15,19 +15,23 @@ const TIME_OPTIONS: { value: TimeOfDay; label: string }[] = [
 
 interface OfficeTripDialogProps {
   date: string;
+  selectionStart?: string;
+  selectionEnd?: string;
   eligibleProjects: FreeagentProject[];
+  trip?: OfficeTrip;
   onClose: () => void;
 }
 
-export function OfficeTripDialog({ date, eligibleProjects, onClose }: OfficeTripDialogProps) {
+export function OfficeTripDialog({ date, selectionStart, selectionEnd, eligibleProjects, trip, onClose }: OfficeTripDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const isEdit = trip != null;
 
   const [projectUrl, setProjectUrl] = useState(eligibleProjects[0]?.url ?? '');
-  const [startDate, setStartDate] = useState(date);
-  const [startTime, setStartTime] = useState<TimeOfDay>('morning');
-  const [endDate, setEndDate] = useState(date);
-  const [endTime, setEndTime] = useState<TimeOfDay>('evening');
-  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState(trip?.startDate ?? selectionStart ?? date);
+  const [startTime, setStartTime] = useState<TimeOfDay>(trip?.startTime ?? 'morning');
+  const [endDate, setEndDate] = useState(trip?.endDate ?? selectionEnd ?? date);
+  const [endTime, setEndTime] = useState<TimeOfDay>(trip?.endTime ?? 'evening');
+  const [description, setDescription] = useState(trip?.description ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,7 +47,21 @@ export function OfficeTripDialog({ date, eligibleProjects, onClose }: OfficeTrip
     }
     setError('');
     setSubmitting(true);
-    await createOfficeTrip(projectUrl, { startDate, startTime, endDate, endTime, description: description || undefined });
+    const data = { startDate, startTime, endDate, endTime, description: description || undefined };
+    if (isEdit) {
+      await updateOfficeTrip(trip.noteUrl, data);
+    } else {
+      await createOfficeTrip(projectUrl, data);
+    }
+    setSubmitting(false);
+    dialogRef.current?.close();
+    onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!trip) return;
+    setSubmitting(true);
+    await deleteOfficeTrip(trip.noteUrl);
     setSubmitting(false);
     dialogRef.current?.close();
     onClose();
@@ -57,9 +75,9 @@ export function OfficeTripDialog({ date, eligibleProjects, onClose }: OfficeTrip
   return (
     <dialog ref={dialogRef} className={styles.mileageDialog} onCancel={handleCancel}>
       <form onSubmit={handleSubmit}>
-        <h3 className={styles.mileageDialogTitle}>Log office trip</h3>
+        <h3 className={styles.mileageDialogTitle}>{isEdit ? 'Edit office trip' : 'Log office trip'}</h3>
 
-        {eligibleProjects.length > 1 && (
+        {!isEdit && eligibleProjects.length > 1 && (
           <div className={styles.mileageField}>
             <label>Project</label>
             <select value={projectUrl} onChange={(e) => setProjectUrl(e.target.value)}>
@@ -110,9 +128,16 @@ export function OfficeTripDialog({ date, eligibleProjects, onClose }: OfficeTrip
         {error && <p style={{ color: '#be342b', fontSize: 13, margin: '0 0 12px' }}>{error}</p>}
 
         <div className={styles.mileageActions}>
-          <button type="button" onClick={handleCancel}>Cancel</button>
+          {isEdit && (
+            <button type="button" onClick={handleDelete} disabled={submitting} data-variant="danger">
+              Delete
+            </button>
+          )}
+          <button type="button" onClick={handleCancel} style={{ marginLeft: isEdit ? 'auto' : undefined }}>
+            Cancel
+          </button>
           <button type="submit" disabled={submitting} data-variant="primary">
-            {submitting ? 'Saving…' : 'Log trip'}
+            {submitting ? 'Saving…' : isEdit ? 'Save' : 'Log trip'}
           </button>
         </div>
       </form>

@@ -39,9 +39,15 @@ export default async function Home({ params }: { params: Promise<{ month: string
       view: 'all',
     })
   );
-  const mileageExpenses = expenseResponses
-    .flatMap((r) => r.expenses)
-    .filter((e) => e.category === 'https://api.freeagent.com/v2/categories/249');
+  const allExpenses = expenseResponses.flatMap((r) => r.expenses);
+  const mileageExpenses = allExpenses.filter(
+    (e) => e.category === 'https://api.freeagent.com/v2/categories/249'
+  );
+  const travelExpenses = allExpenses.filter(
+    (e) =>
+      e.category === 'https://api.freeagent.com/v2/categories/285' ||
+      e.category === 'https://api.freeagent.com/v2/categories/365'
+  );
 
   const dates = [...Array(daysOnScreen)].map((_, i) => {
     const date = calendarStart.add(i, 'day');
@@ -56,6 +62,7 @@ export default async function Home({ params }: { params: Promise<{ month: string
       number: date.format('Do'),
       timeslips: timeslips.filter((t) => t.dated_on === key),
       mileageExpenses: mileageExpenses.filter((e) => e.dated_on === key),
+      travelExpenses: travelExpenses.filter((e) => e.dated_on === key),
     };
 
     return timeslipDate;

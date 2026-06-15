@@ -7,6 +7,7 @@ import { cn } from '@/app/utils/cn';
 import { createTimeslips, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
 import { MileageDialog } from './mileage-dialog';
+import { TravelExpenseDialog } from './travel-expense-dialog';
 
 let closeCurrentMenu: (() => void) | null = null;
 
@@ -19,6 +20,7 @@ export interface TimeslipDate {
   number: string;
   timeslips: FreeagentTimeslip[];
   mileageExpenses: FreeagentExpense[];
+  travelExpenses: FreeagentExpense[];
 }
 
 export type TimeslipDateWithClient = TimeslipDate & {
@@ -55,6 +57,7 @@ export function Date({
   const [dragging, setDragging] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [mileageOpen, setMileageOpen] = useState(false);
+  const [travelOpen, setTravelOpen] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -187,6 +190,15 @@ export function Date({
                         .toFixed(1)}mi
                     </div>
                   )}
+                  {timeslipDate.travelExpenses.length > 0 && (
+                    <div className={styles.mileageEntry}>
+                      <span className="material-symbols-outlined">receipt_long</span>
+                      {timeslipDate.travelExpenses.length} · £
+                      {timeslipDate.travelExpenses
+                        .reduce((sum, e) => sum + Math.abs(parseFloat(e.gross_value)), 0)
+                        .toFixed(2)}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -246,6 +258,16 @@ export function Date({
           >
             Log mileage…
           </button>
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              setContextMenu(null);
+              closeCurrentMenu = null;
+              setTravelOpen(true);
+            }}
+          >
+            Log travel expense…
+          </button>
         </div>
       )}
       {mileageOpen && (
@@ -254,6 +276,13 @@ export function Date({
           eligibleProjects={eligibleProjects}
           fattSettings={fattSettings}
           onClose={() => setMileageOpen(false)}
+        />
+      )}
+      {travelOpen && (
+        <TravelExpenseDialog
+          date={timeslipDate.key}
+          eligibleProjects={eligibleProjects}
+          onClose={() => setTravelOpen(false)}
         />
       )}
     </div>

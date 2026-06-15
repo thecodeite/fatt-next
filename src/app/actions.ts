@@ -2,10 +2,13 @@
 
 import {
   CreateFreeagentTimeslip,
+  ExpensesResponse,
   freeagentDelete,
+  freeagentGetAll,
   freeagentPost,
   freeagentPut,
 } from '@/freeagent';
+import dayjs from 'dayjs';
 import { getFattSettings, saveFattSettings } from '@/fatt-settings';
 
 import { revalidatePath } from 'next/cache';
@@ -85,6 +88,46 @@ export async function saveMileageDestination(name: string, distance: number) {
       },
     },
   });
+}
+
+export async function getTravelExpenseDescriptions(): Promise<string[]> {
+  const from = dayjs().subtract(24, 'month').format('YYYY-MM-DD');
+  const responses = await freeagentGetAll<ExpensesResponse>(
+    '/v2/expenses',
+    new URLSearchParams({ from_date: from, view: 'all' })
+  );
+  const descriptions = responses
+    .flatMap((r) => r.expenses)
+    .filter(
+      (e) =>
+        e.category === 'https://api.freeagent.com/v2/categories/285' ||
+        e.category === 'https://api.freeagent.com/v2/categories/365'
+    )
+    .map((e) => e.description ?? '')
+    .filter(Boolean);
+  return [...new Set(descriptions)];
+}
+
+export async function createTravelExpense(
+  date: string,
+  projectUrl: string,
+  categoryUrl: string,
+  description: string,
+  amount: number
+) {
+  await freeagentPost('/v2/expenses', {
+    expense: {
+      user: 'https://api.freeagent.com/v2/users/91067',
+      category: categoryUrl,
+      dated_on: date,
+      gross_value: (-amount).toString(),
+      currency: 'GBP',
+      description,
+      project: projectUrl,
+    },
+  });
+
+  await revalidatePath('/', 'layout');
 }
 
 export async function updateTimeslip(url: string, newValue: string) {

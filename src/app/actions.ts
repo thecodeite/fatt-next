@@ -188,9 +188,8 @@ export async function createOfficeTrip(
   projectUrl: string,
   trip: Omit<OfficeTrip, 'noteUrl'>
 ): Promise<void> {
-  await freeagentPost('/v2/notes', {
+  await freeagentPost(`/v2/notes?project=${encodeURIComponent(projectUrl)}`, {
     note: {
-      project: projectUrl,
       note: serializeTrip(trip),
     },
   });

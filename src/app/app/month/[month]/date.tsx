@@ -8,6 +8,7 @@ import { createTimeslips, updateTimeslip } from '@/app/actions';
 import { FattSettings } from '@/fatt-settings';
 import { MileageDialog } from './mileage-dialog';
 import { TravelExpenseDialog } from './travel-expense-dialog';
+import { OfficeTripDialog } from './office-trip-dialog';
 import { OfficeTrip } from '@/app/actions';
 
 let closeCurrentMenu: (() => void) | null = null;
@@ -80,6 +81,7 @@ export function Date({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [mileageOpen, setMileageOpen] = useState(false);
   const [travelOpen, setTravelOpen] = useState(false);
+  const [tripOpen, setTripOpen] = useState(false);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -293,6 +295,16 @@ export function Date({
           >
             Log travel expense…
           </button>
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              setContextMenu(null);
+              closeCurrentMenu = null;
+              setTripOpen(true);
+            }}
+          >
+            Log office trip…
+          </button>
         </div>
       )}
       {mileageOpen && (
@@ -308,6 +320,13 @@ export function Date({
           date={timeslipDate.key}
           eligibleProjects={eligibleProjects}
           onClose={() => setTravelOpen(false)}
+        />
+      )}
+      {tripOpen && (
+        <OfficeTripDialog
+          date={timeslipDate.key}
+          eligibleProjects={eligibleProjects}
+          onClose={() => setTripOpen(false)}
         />
       )}
     </div>

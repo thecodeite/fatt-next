@@ -363,6 +363,7 @@ export interface FreeagentCreateContact {
 export interface FreeagentNote {
   url: string;
   note: string;
+  project?: string;
   created_at: string;
   updated_at: string;
 }

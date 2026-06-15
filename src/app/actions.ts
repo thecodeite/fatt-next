@@ -3,11 +3,54 @@
 import {
   CreateFreeagentTimeslip,
   ExpensesResponse,
+  FreeagentNotesResponse,
   freeagentDelete,
   freeagentGetAll,
   freeagentPost,
   freeagentPut,
 } from '@/freeagent';
+
+export interface OfficeTrip {
+  startDate: string;
+  startTime: 'morning' | 'midday' | 'evening';
+  endDate: string;
+  endTime: 'morning' | 'midday' | 'evening';
+  description?: string;
+  noteUrl: string;
+}
+
+const FATT_TRIP_PREFIX = 'fatt:trip';
+
+function serializeTrip(trip: Omit<OfficeTrip, 'noteUrl'>): string {
+  const lines = [
+    FATT_TRIP_PREFIX,
+    `Start: ${trip.startDate} ${trip.startTime}`,
+    `End: ${trip.endDate} ${trip.endTime}`,
+  ];
+  if (trip.description) lines.push(`Description: ${trip.description}`);
+  return lines.join('\n');
+}
+
+function deserializeTrip(noteUrl: string, body: string): OfficeTrip | null {
+  const lines = body.split('\n');
+  if (lines[0] !== FATT_TRIP_PREFIX) return null;
+  const fields: Record<string, string> = {};
+  for (const line of lines.slice(1)) {
+    const idx = line.indexOf(': ');
+    if (idx !== -1) fields[line.slice(0, idx)] = line.slice(idx + 2);
+  }
+  const [startDate, startTime] = (fields['Start'] ?? '').split(' ');
+  const [endDate, endTime] = (fields['End'] ?? '').split(' ');
+  if (!startDate || !startTime || !endDate || !endTime) return null;
+  return {
+    noteUrl,
+    startDate,
+    startTime: startTime as OfficeTrip['startTime'],
+    endDate,
+    endTime: endTime as OfficeTrip['endTime'],
+    description: fields['Description'],
+  };
+}
 import dayjs from 'dayjs';
 import { getFattSettings, saveFattSettings } from '@/fatt-settings';
 
@@ -127,6 +170,30 @@ export async function createTravelExpense(
     },
   });
 
+  await revalidatePath('/', 'layout');
+}
+
+export async function getOfficeTrips(projectUrl: string): Promise<OfficeTrip[]> {
+  const pages = await freeagentGetAll<FreeagentNotesResponse>(
+    '/v2/notes',
+    new URLSearchParams({ project: projectUrl })
+  );
+  return pages
+    .flatMap((p) => p.notes)
+    .map((n) => deserializeTrip(n.url, n.note))
+    .filter((t): t is OfficeTrip => t !== null);
+}
+
+export async function createOfficeTrip(
+  projectUrl: string,
+  trip: Omit<OfficeTrip, 'noteUrl'>
+): Promise<void> {
+  await freeagentPost('/v2/notes', {
+    note: {
+      project: projectUrl,
+      note: serializeTrip(trip),
+    },
+  });
   await revalidatePath('/', 'layout');
 }
 

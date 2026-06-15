@@ -20,6 +20,7 @@ interface OfficeTrip {
   startTime: 'morning' | 'midday' | 'evening';
   endDate: string;      // YYYY-MM-DD
   endTime: 'morning' | 'midday' | 'evening';
+  description?: string;
 }
 ```
 
@@ -30,7 +31,10 @@ Each trip is stored as a single FreeAgent Note on the project. The note body use
 fatt:trip
 Start: 2026-06-10 morning
 End: 2026-06-12 evening
+Description: Visit office
 ```
+
+`Description` is optional. Notes without it are valid.
 
 The prefix `fatt:<type>` namespaces all fatt-written notes and allows future data types (e.g. `fatt:goal`, `fatt:budget`) to coexist in the same project's notes without collision. Each future type defines its own set of `Key: value` fields.
 
@@ -62,6 +66,7 @@ Fields:
 | Start time | Select: **Morning** / **Mid-day** / **Evening**. Default: Morning. |
 | End date   | Pre-filled same as start date. Date input. |
 | End time   | Select: **Morning** / **Mid-day** / **Evening**. Default: Evening. |
+| Description | Optional free-text. Brief label for the trip (e.g. "Visit office", "Client site — Leeds"). |
 
 - End date must be ≥ start date. Validate on submit.
 - Submitting saves the trip and closes the dialog.

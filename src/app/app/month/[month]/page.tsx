@@ -8,6 +8,7 @@ import {
   TasksResponse,
   TimeslipResponse,
 } from '@/freeagent';
+import { getOfficeTrips, OfficeTrip } from '@/app/actions';
 import dayjs from 'dayjs';
 import { TimeslipDate } from './date';
 import { ClientPage } from './client-page';
@@ -90,6 +91,15 @@ export default async function Home({ params }: { params: Promise<{ month: string
     ...unMatchedTasks.map((response) => response.task),
   ];
 
+  const eligibleProjects = projects.projects.filter((project) =>
+    tasks.some((task) => task.project === project.url && task.is_billable)
+  );
+
+  const tripsByProject = await Promise.all(
+    eligibleProjects.map((p) => getOfficeTrips(p.url))
+  );
+  const officeTrips: OfficeTrip[] = tripsByProject.flat();
+
   return (
     <main>
       <ClientPage
@@ -98,6 +108,7 @@ export default async function Home({ params }: { params: Promise<{ month: string
         projects={projects.projects}
         dates={dates}
         fattSettings={fattSettings}
+        officeTrips={officeTrips}
       />
     </main>
   );

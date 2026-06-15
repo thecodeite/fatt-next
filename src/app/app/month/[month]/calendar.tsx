@@ -29,6 +29,7 @@ export function Calendar({
   eligibleProjects,
   selectionStart,
   selectionEnd,
+  companySubdomain,
 }: {
   dates: TimeslipDateWithClient[];
   setStartDate: Dispatch<SetStateAction<string>>;
@@ -38,6 +39,7 @@ export function Calendar({
   eligibleProjects: FreeagentProject[];
   selectionStart: string;
   selectionEnd: string;
+  companySubdomain: string;
 }) {
   const [hideWeekends, setHideWeekends] = useState(true);
 
@@ -87,6 +89,7 @@ export function Calendar({
                   eligibleProjects={eligibleProjects}
                   selectionStart={selectionStart}
                   selectionEnd={selectionEnd}
+                  companySubdomain={companySubdomain}
                 />
               </div>
             );

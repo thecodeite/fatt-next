@@ -40,6 +40,21 @@ interface DateProps {
   eligibleProjects: FreeagentProject[];
   selectionStart: string;
   selectionEnd: string;
+  companySubdomain: string;
+}
+
+const FA_USER_ID = '91067';
+
+function expenseId(expenseUrl: string): string {
+  return expenseUrl.split('/').pop() ?? '';
+}
+
+function expenseUrl(companySubdomain: string, expenses: FreeagentExpense[], date: string): string {
+  const base = `https://${companySubdomain}.freeagent.com/users/${FA_USER_ID}/expenses`;
+  if (expenses.length === 1) {
+    return `${base}/${expenseId(expenses[0].url)}/edit`;
+  }
+  return `${base}?user_id=${FA_USER_ID}&view=${date}_${date}`;
 }
 
 const TIME_OFFSETS: Record<OfficeTrip['startTime'], number> = {
@@ -80,6 +95,7 @@ export function Date({
   eligibleProjects,
   selectionStart,
   selectionEnd,
+  companySubdomain,
 }: DateProps) {
   const [dragging, setDragging] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -221,21 +237,37 @@ export function Date({
                     />
                   )}
                   {timeslipDate.mileageExpenses.length > 0 && (
-                    <div className={styles.mileageEntry}>
+                    <a
+                      className={styles.expenseEntry}
+                      href={expenseUrl(companySubdomain, timeslipDate.mileageExpenses, timeslipDate.key)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span className="material-symbols-outlined">directions_car</span>
-                      {timeslipDate.mileageExpenses
-                        .reduce((sum, e) => sum + parseFloat(e.mileage ?? '0'), 0)
-                        .toFixed(1)}mi
-                    </div>
+                      <em>
+                        {timeslipDate.mileageExpenses
+                          .reduce((sum, e) => sum + parseFloat(e.mileage ?? '0'), 0)
+                          .toFixed(1)}mi
+                      </em>
+                    </a>
                   )}
                   {timeslipDate.travelExpenses.length > 0 && (
-                    <div className={styles.mileageEntry}>
+                    <a
+                      className={styles.expenseEntry}
+                      href={expenseUrl(companySubdomain, timeslipDate.travelExpenses, timeslipDate.key)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span className="material-symbols-outlined">receipt_long</span>
+                      <em>
                       {timeslipDate.travelExpenses.length} · £
                       {timeslipDate.travelExpenses
                         .reduce((sum, e) => sum + Math.abs(parseFloat(e.gross_value)), 0)
                         .toFixed(2)}
-                    </div>
+                      </em>
+                    </a>
                   )}
                 </>
               )}

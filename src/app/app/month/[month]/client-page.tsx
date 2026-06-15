@@ -17,6 +17,7 @@ interface ClientPageProps {
   projects: FreeagentProject[];
   dates: TimeslipDate[];
   fattSettings: FattSettings;
+  companySubdomain: string;
 }
 
 export function ClientPage({
@@ -25,6 +26,7 @@ export function ClientPage({
   projects,
   dates,
   fattSettings,
+  companySubdomain,
 }: ClientPageProps) {
   const { datesDescription, startDate, endDate, setStartDate, setEndDate, inRange, selectedDates } =
     useDateSelect();
@@ -106,6 +108,7 @@ export function ClientPage({
         eligibleProjects={eligibleProjects}
         selectionStart={startDate}
         selectionEnd={endDate}
+        companySubdomain={companySubdomain}
       />
     </>
   );

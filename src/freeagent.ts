@@ -360,6 +360,16 @@ export interface FreeagentCreateContact {
   };
 }
 
+export interface FreeagentCompany {
+  url: string;
+  subdomain: string;
+  name: string;
+}
+
+export interface FreeagentCompanyResponse {
+  company: FreeagentCompany;
+}
+
 export interface FreeagentNote {
   url: string;
   note: string;

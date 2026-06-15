@@ -1,6 +1,7 @@
 'use server';
 import {
   ExpensesResponse,
+  FreeagentCompanyResponse,
   freeagentGet,
   freeagentGetAll,
   ProjectsResponse,
@@ -25,6 +26,8 @@ export default async function Home({ params }: { params: Promise<{ month: string
   const calendarEnd = calendarStart.add(daysOnScreen, 'day');
 
   const fattSettings = await getFattSettings();
+  const companyResponse = await freeagentGet<FreeagentCompanyResponse>('/v2/company');
+  const companySubdomain = companyResponse.company.subdomain;
 
   const requestUrl = `/v2/timeslips?from_date=${calendarStart.format(
     'YYYY-MM-DD'
@@ -116,6 +119,7 @@ export default async function Home({ params }: { params: Promise<{ month: string
         projects={projects.projects}
         dates={datesWithTrips}
         fattSettings={fattSettings}
+        companySubdomain={companySubdomain}
       />
     </main>
   );
